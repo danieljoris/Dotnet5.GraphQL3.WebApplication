@@ -5,12 +5,25 @@
     </PropertyGroup>
 
     <PropertyGroup Label="Packages dependency versions">
-        <Microsoft_EntityFrameworkCore_Version>5.0.0-rc.1.20451.13</Microsoft_EntityFrameworkCore_Version>
-        <Microsoft_DependencyInjection_Version>5.0.0-rc.1.20451.14</Microsoft_DependencyInjection_Version>
-        <FluentValidation_Version>9.3.0-preview2</FluentValidation_Version>
-        <GraphQL_Server_Version>3.5.0-alpha0073</GraphQL_Server_Version>
-        <GraphQL_Client_Version>3.1.9</GraphQL_Client_Version>
-        <GraphQL_Version>3.0.0-preview-1719</GraphQL_Version>
-        <Scrutor_Version>3.2.2</Scrutor_Version>
+
+        <!--Microsoft-->
+        <Microsoft_DependencyInjection_Version>5.0.0</Microsoft_DependencyInjection_Version>
+
+        <!--EF Core-->
+        <Microsoft_EntityFrameworkCore_Version>5.0.3</Microsoft_EntityFrameworkCore_Version>
+
+        <!--GraphQL-->
+        <GraphQL_Server_Version>4.4.1</GraphQL_Server_Version>
+        <GraphQL_Client_Version>3.2.1</GraphQL_Client_Version>
+        <GraphQL_Version>3.3.2</GraphQL_Version>
+
+        <!--AutoMapper-->
+        <AutoMapper_DependencyInjection_Version>8.1.1</AutoMapper_DependencyInjection_Version>
+        <AutoMapper_Version>10.1.1</AutoMapper_Version>
+
+        <!--Others-->
+        <FluentValidation_Version>9.5.1</FluentValidation_Version>
+        <Scrutor_Version>3.3.0</Scrutor_Version>
+        
     </PropertyGroup>
 </Project>

@@ -1,27 +1,34 @@
 using System;
+using System.Linq;
 using Dotnet5.GraphQL3.Store.WebMVC.Clients;
+using Dotnet5.GraphQL3.Store.WebMVC.Extensions.EndpointRouteBuilders;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
 namespace Dotnet5.GraphQL3.Store.WebMVC
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _env;
+        private readonly string[] _readinessTags = {"ready"};
+        private readonly string[] _livenessTags = {"live"};
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
-            Configuration = configuration;
+            _env = env;
+            _configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
-
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            if (env.IsDevelopment())
+            if (_env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -38,6 +45,23 @@ namespace Dotnet5.GraphQL3.Store.WebMVC
             {
                 endpoints.MapControllerRoute("default",
                     "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapApplicationHealthChecks(
+                    pattern: "/health", 
+                    predicate: registration
+                        => registration.Tags.Any() is false);
+                
+                endpoints.MapApplicationHealthChecks(
+                    pattern: "/health/live", 
+                    predicate: registration
+                        => registration.Tags.Any(item 
+                               => _livenessTags.Contains(item)));
+                    
+                endpoints.MapApplicationHealthChecks(
+                    pattern: "/health/ready", 
+                    predicate: registration 
+                        => registration.Tags.Any(item 
+                            => _readinessTags.Contains(item)));
             });
         }
 
@@ -45,9 +69,9 @@ namespace Dotnet5.GraphQL3.Store.WebMVC
         {
             services.AddControllersWithViews();
 
-            services.AddSingleton(provider
+            services.AddSingleton(_
                 => new GraphQLHttpClient(
-                    endPoint: new Uri(Configuration["HttpClient:Store"]),
+                    endPoint: new Uri($"{_configuration["HttpClient:Store"]}/graphql"),
                     serializer: new SystemTextJsonSerializer(options =>
                     {
                         options.PropertyNameCaseInsensitive = true;
@@ -55,6 +79,18 @@ namespace Dotnet5.GraphQL3.Store.WebMVC
                     })));
 
             services.AddSingleton<IStoreGraphClient, StoreGraphClient>();
+
+            services.AddHealthChecks()
+                .AddUrlGroup(
+                    uri: new Uri($"{_configuration["HttpClient:Store"]}/health/live"), 
+                    name: "Store Web API (Live)", 
+                    failureStatus: HealthStatus.Degraded,
+                    tags: _livenessTags)
+                .AddUrlGroup(
+                    uri: new Uri($"{_configuration["HttpClient:Store"]}/health/ready"), 
+                    name: "Store Web API (Ready)", 
+                    failureStatus: HealthStatus.Unhealthy,
+                    tags: _readinessTags);
         }
     }
 }

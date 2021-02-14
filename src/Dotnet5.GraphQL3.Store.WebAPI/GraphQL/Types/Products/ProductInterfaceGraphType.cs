@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Dotnet5.GraphQL3.Store.Domain.Entities.Products;
 using Dotnet5.GraphQL3.Store.Domain.Entities.Products.Backpacks;
 using Dotnet5.GraphQL3.Store.Domain.Entities.Products.Boots;
@@ -32,24 +33,24 @@ namespace Dotnet5.GraphQL3.Store.WebAPI.GraphQL.Types.Products
             Field(x => x.Stock);
             Field<ProductOptionEnumGraphType>("option");
 
-            FieldAsync<ListGraphType<ReviewGraphType>>(
-                name: "reviews",
-                resolve: async context => await context
-                    .RequestServices.GetRequiredService<IDataLoaderContextAccessor>()
-                    .Context.GetOrAddCollectionBatchLoader<Guid, Review>(
-                        loaderKey: "getLookupByProductIdsAsync",
-                        fetchFunc: context.RequestServices
-                            .GetRequiredService<IProductService>()
-                            .GetLookupReviewsByProductIdsAsync)
-                    .LoadAsync(context.Source.Id));
-            
+            Field<ListGraphType<ReviewGraphType>, IEnumerable<Review>>()
+                .Name("reviews")
+                .ResolveAsync(context
+                    => context.RequestServices.GetRequiredService<IDataLoaderContextAccessor>()
+                        .Context.GetOrAddCollectionBatchLoader<Guid, Review>(
+                            loaderKey: "getLookupByProductIdsAsync",
+                            fetchFunc: context.RequestServices
+                                .GetRequiredService<IProductService>()
+                                .GetLookupReviewsByProductIdsAsync)
+                        .LoadAsync(context.Source.Id));
+
             ResolveType = @object =>
             {
                 return @object switch
                 {
-                    Boot _ => bootGraphType,
-                    Backpack _ => backpackGraphType,
-                    Kayak _ => kayakGraphType,
+                    Boot => bootGraphType,
+                    Backpack => backpackGraphType,
+                    Kayak => kayakGraphType,
                     _ => default
                 };
             };

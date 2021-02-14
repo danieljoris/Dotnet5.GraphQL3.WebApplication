@@ -3,9 +3,9 @@ using GraphQL.Server.Ui.Playground;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
 
-namespace Dotnet5.GraphQL3.Store.WebAPI.GraphQL.DependencyInjection
+namespace Dotnet5.GraphQL3.Store.WebAPI.GraphQL.Extensions.DependencyInjection
 {
-    public static class Configure
+    public static class ApplicationBuilderExtensions
     {
         public static IApplicationBuilder UseApplicationGraphQL<TSchema>(this IApplicationBuilder app)
             where TSchema : ISchema

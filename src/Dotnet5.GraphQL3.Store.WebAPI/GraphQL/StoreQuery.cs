@@ -1,5 +1,8 @@
 using System;
+using Dotnet5.GraphQL3.Repositories.Abstractions.Pages;
+using Dotnet5.GraphQL3.Store.Domain.Entities.Products;
 using Dotnet5.GraphQL3.Store.Services;
+using Dotnet5.GraphQL3.Store.WebAPI.GraphQL.Types.Pages;
 using Dotnet5.GraphQL3.Store.WebAPI.GraphQL.Types.Products;
 using Dotnet5.GraphQL3.Store.WebAPI.GraphQL.Types.Reviews;
 using GraphQL;
@@ -13,16 +16,15 @@ namespace Dotnet5.GraphQL3.Store.WebAPI.GraphQL
     {
         public StoreQuery()
         {
-            FieldAsync<ListGraphType<ProductInterfaceGraphType>>(
+            FieldAsync<PagedResultGraphType<ProductInterfaceGraphType, Product>>(
                 name: "products",
-                resolve: async context =>
-                {
-                    return await context.RequestServices
+                arguments: new QueryArguments(new QueryArgument<PageParamsGraphType> {Name = "pageParams"}),
+                resolve: async context 
+                    => await context.RequestServices
                         .GetRequiredService<IProductService>()
                         .GetAllAsync(
-                            selector: product => product,
-                            cancellationToken: context.CancellationToken);
-                });
+                            pageParams: context.GetArgument<PageParams>("pageParams"), 
+                            cancellationToken: context.CancellationToken));
 
             FieldAsync<ProductInterfaceGraphType>(
                 name: "product",

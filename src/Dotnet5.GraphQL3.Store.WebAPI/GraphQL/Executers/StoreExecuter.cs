@@ -18,35 +18,21 @@ namespace Dotnet5.GraphQL3.Store.WebAPI.GraphQL.Executers
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public StoreExecuter(IServiceProvider serviceProvider,
-            TSchema schema, IDocumentExecuter documentExecuter,
-            IOptions<GraphQLOptions> options,
-            IEnumerable<IDocumentExecutionListener> listeners,
-            IEnumerable<IValidationRule> validationRules)
+        public StoreExecuter(IServiceProvider serviceProvider, TSchema schema, IDocumentExecuter documentExecuter, IOptions<GraphQLOptions> options, IEnumerable<IDocumentExecutionListener> listeners, IEnumerable<IValidationRule> validationRules)
             : base(schema, documentExecuter, options, listeners, validationRules)
         {
             _serviceProvider = serviceProvider;
         }
 
-        protected override ExecutionOptions GetOptions(string operationName, string query, Inputs variables,
-            IDictionary<string, object> context, CancellationToken cancellationToken)
+        public override async Task<ExecutionResult> ExecuteAsync(string operationName, string query, Inputs variables, IDictionary<string, object> context, IServiceProvider requestServices, CancellationToken cancellationToken = new())
         {
-            var options = base.GetOptions(operationName, query, variables, context, cancellationToken);
-            options.RequestServices = _serviceProvider;
-            return options;
-        }
-
-        public override async Task<ExecutionResult> ExecuteAsync(string operationName, string query, Inputs variables,
-            IDictionary<string, object> context, CancellationToken cancellationToken = new CancellationToken())
-        {
-            var result = await base.ExecuteAsync(operationName, query, variables, context, cancellationToken);
+            var result = await base.ExecuteAsync(operationName, query, variables, context, requestServices, cancellationToken);
             var notification = _serviceProvider.GetRequiredService<INotificationContext>();
 
-            if (notification.HasNotifications)
-            {
-                result.Errors = notification.ExecutionErrors;
-                result.Data = default;
-            }
+            if (notification.HasNotifications is false) return result;
+
+            result.Errors = notification.ExecutionErrors;
+            result.Data = default;
 
             return result;
         }

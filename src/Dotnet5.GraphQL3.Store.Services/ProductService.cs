@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Dotnet5.GraphQL3.CrossCutting.Notifications;
+using Dotnet5.GraphQL3.Repositories.Abstractions.Pages;
 using Dotnet5.GraphQL3.Repositories.Abstractions.UnitsOfWork;
 using Dotnet5.GraphQL3.Services.Abstractions;
 using Dotnet5.GraphQL3.Services.Abstractions.Resources;
@@ -22,7 +23,7 @@ namespace Dotnet5.GraphQL3.Store.Services
         public ProductService(IUnitOfWork unitOfWork, IProductRepository repository, IMapper mapper, INotificationContext notificationContext)
             : base(unitOfWork, repository, mapper, notificationContext) { }
 
-        public async Task<Review> AddReviewAsync(ReviewModel reviewModel, CancellationToken cancellationToken = default)
+        public async Task<Review> AddReviewAsync(ReviewModel reviewModel, CancellationToken cancellationToken)
         {
             if (reviewModel is null)
             {
@@ -31,10 +32,10 @@ namespace Dotnet5.GraphQL3.Store.Services
             }
 
             var product = await Repository.GetByIdAsync(
-                    id: reviewModel.ProductId,
-                    include: products => products.Include(x => x.Reviews),
-                    withTracking: true,
-                    cancellationToken: cancellationToken);
+                id: reviewModel.ProductId,
+                include: products => products.Include(x => x.Reviews),
+                asTracking: true,
+                cancellationToken: cancellationToken);
 
             var review = Mapper.Map<Review>(reviewModel);
             product?.AddReview(review);
@@ -42,15 +43,20 @@ namespace Dotnet5.GraphQL3.Store.Services
             return review;
         }
 
-        public async Task<ILookup<Guid, Review>> GetLookupReviewsByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken = default)
+        public async Task<ILookup<Guid, Review>> GetLookupReviewsByProductIdsAsync(IEnumerable<Guid> productIds, CancellationToken cancellationToken)
         {
-            var reviews = await Repository.GetAllAsync(
-                    selector: product => product.Reviews,
-                    predicate: product => productIds.Contains(product.Id),
-                    include: products => products.Include(x => x.Reviews),
-                    cancellationToken: cancellationToken);
+            var ids = productIds?.ToList();
+            if (ids is {Count: > 0} is false) return default;
 
-            return reviews.SelectMany(x => x)
+            var pagedResult = await Repository.GetAllProjectionsAsync(
+                pageParams: new PageParams {Size = ids.Count},
+                selector: product => product.Reviews,
+                predicate: product => ids.Contains(product.Id),
+                include: products => products.Include(product => product.Reviews),
+                cancellationToken: cancellationToken);
+
+            return pagedResult.Items
+                .SelectMany(review => review)
                 .ToLookup(review => review.ProductId);
         }
     }

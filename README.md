@@ -1,12 +1,18 @@
 # Dotnet5.GraphQL3.WebApplication
 
-This project exemplify the implementation and **Dockerization** of a simple Razor Web MVC Core consuming an full **GraphQL 3** Web API, build in a **.NET 5** multi-layer project, considering development best practices, like **SOLID** and **DRY**, applying **Domain-Driven** concepts in a **Hexagonal Architecture**.
+This project exemplify the implementation and **dockerization** of a simple Razor Web MVC Core consuming a full **GraphQL 3** Web API, build in a **.NET 5** multi-layer project, considering development best practices, like **SOLID**, **KISS** and **DRY**, applying **Domain-Driven** concepts in a **Hexagonal Architecture**.
+         
+|WebAPI|
+|:----:| 
+|![Build/Test](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Build/Test/badge.svg) ![API Image](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/API%20Image/badge.svg) ![Push API](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Push%20API/badge.svg?branch=master) ![CodeQL](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/CodeQL/badge.svg)  [![Codacy Badge](https://app.codacy.com/project/badge/Grade/35ba87f59d524982baeb803a3a9c42f7)](https://www.codacy.com/gh/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AntonioFalcao/Dotnet5.GraphQL3.WebApplication&amp;utm_campaign=Badge_Grade) ![](https://img.shields.io/docker/pulls/antoniofalcaojr/dotnet5-graphql3-webmvc?style=flat)|                
+|**WebMVC**|
+|![Build/Test](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Build/Test/badge.svg) ![MVC Image](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/MVC%20Image/badge.svg) ![Push MVC](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Push%20MVC/badge.svg?branch=master) ![CodeQL](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/CodeQL/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/35ba87f59d524982baeb803a3a9c42f7)](https://www.codacy.com/gh/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AntonioFalcao/Dotnet5.GraphQL3.WebApplication&amp;utm_campaign=Badge_Grade) ![](https://img.shields.io/docker/pulls/antoniofalcaojr/dotnet5-graphql3-webapi?style=flat)|
 
-|APP|CI|CD|Sec/QA|               
-|----|---|---|---| 
-|WebAPI|![Build/Test](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Build/Test/badge.svg) ![API Image](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/API%20Image/badge.svg)|![Push API](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Push%20API/badge.svg?branch=master)|![CodeQL](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/CodeQL/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/35ba87f59d524982baeb803a3a9c42f7)](https://www.codacy.com/gh/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AntonioFalcao/Dotnet5.GraphQL3.WebApplication&amp;utm_campaign=Badge_Grade)|               
-|WebMVC|![Build/Test](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Build/Test/badge.svg) ![MVC Image](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/MVC%20Image/badge.svg)|![Push MVC](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/Push%20MVC/badge.svg?branch=master)|![CodeQL](https://github.com/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/workflows/CodeQL/badge.svg) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/35ba87f59d524982baeb803a3a9c42f7)](https://www.codacy.com/gh/AntonioFalcao/Dotnet5.GraphQL3.WebApplication/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=AntonioFalcao/Dotnet5.GraphQL3.WebApplication&amp;utm_campaign=Badge_Grade)|
-___
+Docker images: 
+[WebAPI](https://hub.docker.com/repository/docker/antoniofalcaojr/dotnet5-graphql3-webapi)  | 
+[WebMVC](https://hub.docker.com/repository/docker/antoniofalcaojr/dotnet5-graphql3-webmvc)
+
+---
 
 ![home](./.assets/img/home.PNG)
 
@@ -29,7 +35,7 @@ After this, to configure the HTTP client, `init` secrets in [`./src/Dotnet5.Grap
 
 ```bash
 dotnet user-secrets init
-dotnet user-secrets set "HttpClient:Store" "http://localhost:5000/graphql"
+dotnet user-secrets set "HttpClient:Store" "http://localhost:5000"
 ```
 
 ##### AppSettings 
@@ -51,7 +57,7 @@ WebMCV
 ```json5
 {
   "HttpClient": {
-    "Store": "http://localhost:5000/graphql"
+    "Store": "http://localhost:5000"
   }
 }
 ```
@@ -78,7 +84,7 @@ WebMCV
 ```json5
 {
   "HttpClient": {
-    "Store": "http://webapi:5000/graphql"
+    "Store": "http://webapi:5000"
   }
 }
 ```
@@ -107,19 +113,25 @@ protected void AddError(string errorMessage, ValidationResult validationResult =
 To the **GraphQL** the notification context delivery a `ExecutionErrors` that is propagated to `result` from execution by a personalised [`Executer`](./src/Dotnet5.GraphQL3.Store.WebAPI/GraphQL/Executers/StoreExecuter.cs):  
 
 ```c#
-var result = await base.ExecuteAsync(operationName, query, variables, context, cancellationToken);
-var notificationContext = _serviceProvider.GetRequiredService<INotificationContext>();
-
-if (notificationContext.HasNotifications)
+public override async Task<ExecutionResult> ExecuteAsync(string operationName, string query, Inputs variables, IDictionary<string, object> context, IServiceProvider requestServices, CancellationToken cancellationToken = new CancellationToken())
 {
-    result.Errors = notificationContext.ExecutionErrors;
+    var result = await base.ExecuteAsync(operationName, query, variables, context, requestServices, cancellationToken);
+    var notification = requestServices.GetRequiredService<INotificationContext>();
+
+    if (notification.HasNotifications is false) return result;
+
+    result.Errors = notification.ExecutionErrors;
     result.Data = default;
+    
+    return result;
 }
 ```
 
 ### Resolving `Scoped` dependencies with `Singleton` Schema.
 
-Is necessary, in the same personalised [`Executer`](./src/Dotnet5.GraphQL3.Store.WebAPI/GraphQL/Executers/StoreExecuter.cs) define the _service provider_ that will be used from `resolvers` on `fields`:
+_It's no more necessary after version 4.2.0 from  **GraphQL Server**. By default, the Service Provider is already being propagated._
+
+~~Is necessary, in the same personalised [`Executer`](./src/Dotnet5.GraphQL3.Store.WebAPI/GraphQL/Executers/StoreExecuter.cs) define the _service provider_ that will be used from `resolvers` on `fields`:~~
 
 ```c#
 var options = base.GetOptions(operationName, query, variables, context, cancellationToken);
@@ -293,6 +305,12 @@ services:
     environment:
       SA_PASSWORD: "!MyComplexPassword"
       ACCEPT_EULA: "Y"
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     networks:
       - graphqlstore
 
@@ -300,11 +318,12 @@ services:
     container_name: webapi
     image: antoniofalcaojr/dotnet5-graphql3-webapi
     environment:
-      - ASPNETCORE_URLS=http://*:5000    
+      - ASPNETCORE_URLS=http://*:5000
     ports:
       - 5000:5000
     depends_on:
-      - mssql
+      mssql:
+        condition: service_healthy
     networks:
       - graphqlstore
 
@@ -316,7 +335,7 @@ services:
     ports:
       - 7000:7000
     depends_on:
-      - webapi            
+      - webapi
     networks:
       - graphqlstore
 
@@ -324,8 +343,34 @@ networks:
   graphqlstore:
     driver: bridge
 ```
+### Health checks
 
-## GraphQL Playground 
+Based on cloud-native concepts, **Readiness** and **Liveness** integrity verification strategies were implemented.
+
+> `/health`   
+> Just check if the instance is running.
+
+> `/health/live`  
+> Check if the instance is running and all the dependencies too.
+
+> `/health/ready`
+> Check if the instance and all the dependencies are ready to attend to all functionalities.
+
+Web API
+
+`http://localhost:5000/health/ready`
+
+![Readiness](./.assets/img/Readiness.png)
+
+Web MVC
+
+`http://localhost:7000/health/ready`
+
+![Readiness](./.assets/img/ReadinessMVC.png)
+
+---
+
+### GraphQL Playground 
 
 By default **Playground** respond at `http://localhost:5000/ui/playground` but is possible configure the host and many others details in [`../...WebAPI/GraphQL/DependencyInjection/Configure.cs`](./src/Dotnet5.GraphQL3.Store.WebAPI/GraphQL/DependencyInjection/Configure.cs)
 
@@ -362,14 +407,13 @@ QUERY
   }
 }
 
-fragment comparisonFields on Product {
+fragment comparisonFields on product {
   id
   name
   rating
   description
 }
 ```
-
 RESULT
 
 ```json5
@@ -391,16 +435,18 @@ RESULT
 }
 ```
 ___
-#### Query named's and Variables
 
+#### Query named's and Variables
 
 QUERY
 
 ```markdown
 query all {
   products {
-    id
-    name
+    items {
+      id
+      name
+    }
   }
 }
 
@@ -430,9 +476,11 @@ HTTP BODY
     },
     "query": "query all {
         products {
-          id
-          name
-        }
+          items {          
+            id
+            name
+         }
+       }
     }
     query byid($productId: ID!) {
         product(id: $productId) {
@@ -454,10 +502,12 @@ QUERY
 ```markdown
 query all($showPrice: Boolean = false) {
   products {
-    id
-    name
-    price @include(if: $showPrice)
-    rating @skip(if: $showPrice)
+    items {
+      id
+      name
+      price @include(if: $showPrice)
+      rating @skip(if: $showPrice)
+    }
   }
 }
 ```
@@ -480,14 +530,59 @@ HTTP BODY
     },
     "query": "query all($showPrice: Boolean = false) {
           products {
-            id
-            name
-            price @include(if: $showPrice)
-            rating @skip(if: $showPrice)
-          }
+            items {
+              id
+              name
+              price @include(if: $showPrice)
+              rating @skip(if: $showPrice)
+            }
+        }
     }"
 }
 ```
+___
+### Pagination
+
+QUERY
+
+```markdown
+{
+  products(pageParams: { index: 2, size: 1 }) {
+    items {
+      id
+    }
+    pageInfo {
+      current
+      hasNext
+      hasPrevious
+      size
+    }
+  }
+}
+```
+
+RESULT
+
+```json5
+{
+  "data": {
+    "products": {
+      "items": [
+        {
+          "id": "3b2f6ce4-1b1d-4376-80a6-0b8d51932757"
+        }
+      ],
+      "pageInfo": {
+        "current": 2,
+        "hasNext": true,
+        "hasPrevious": true,
+        "size": 1
+      }
+    }
+  }
+}
+```
+
 ___
 
 ## Mutations
@@ -557,14 +652,14 @@ ___
 
 ## Built With
 
-### Microsoft Stack - v5.0 (RC 1)
+### Microsoft Stack - v5.0
 
 * [.NET 5.0](https://dotnet.microsoft.com/) - Base framework;
 * [ASP.NET 5.0](https://docs.microsoft.com/en-us/aspnet/core/?view=aspnetcore-3.1) - Web framework;
 * [Entity Framework Core 5.0](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-5.0/plan) - ORM;
 * [Microsoft SQL Server on Linux for Docker](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-5.0/plan) - Database.
 
-### GraphQL Stack - v3.0 (preview/alpha)
+### GraphQL Stack - v3.0
 
 * [GraphQL](https://graphql.org/) - GraphQL is a query language for APIs and a runtime for fulfilling those queries with data;
 * [GraphQL for .NET](https://github.com/graphql-dotnet/graphql-dotnet/) - This is an implementation of GraphQL in .NET;

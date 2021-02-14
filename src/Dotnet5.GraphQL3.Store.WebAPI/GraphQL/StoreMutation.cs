@@ -22,14 +22,11 @@ namespace Dotnet5.GraphQL3.Store.WebAPI.GraphQL
                     var review = await context.RequestServices
                         .GetRequiredService<IProductService>()
                         .AddReviewAsync(
-                            reviewModel: model,
+                            reviewModel: model, 
                             cancellationToken: context.CancellationToken);
 
-                    if (review.IsValid)
-                    {
-                        context.RequestServices.GetRequiredService<IReviewMessageService>()
-                            .Add(model: model);
-                    }
+                    if (review is {IsValid: true})
+                        context.RequestServices.GetRequiredService<IReviewMessageService>().Add(model);
 
                     return review;
                 });
