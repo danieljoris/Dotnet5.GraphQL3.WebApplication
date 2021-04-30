@@ -1,7 +1,6 @@
 version: "3.7"
 
 services:
-
   mssql:
     container_name: mssql
     image: mcr.microsoft.com/mssql/server
@@ -10,6 +9,12 @@ services:
     environment:
       SA_PASSWORD: "!MyComplexPassword"
       ACCEPT_EULA: "Y"
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     networks:
       - graphqlstore
 
@@ -18,30 +23,52 @@ services:
     image: webapi
     build:
       context: .
-      dockerfile: ./src/Dotnet5.GraphQL3.Store.WebAPI/Dockerfile
+      dockerfile: ./src/Dotnet6.GraphQL4.Store.WebAPI/Dockerfile
     environment:
       - ASPNETCORE_URLS=http://*:5000
     ports:
       - 5000:5000
+    depends_on:
+      mssql:
+        condition: service_healthy
     networks:
       - graphqlstore
-    depends_on:
-      - mssql
 
   webmvc:
     container_name: webmvc
     image: webmvc
     build:
       context: .
-      dockerfile: ./src/Dotnet5.GraphQL3.Store.WebMVC/Dockerfile
+      dockerfile: ./src/Dotnet6.GraphQL4.Store.WebMVC/Dockerfile
     environment:
       - ASPNETCORE_URLS=http://*:7000
     ports:
       - 7000:7000
-    networks:
-      - graphqlstore
     depends_on:
       - webapi
+    networks:
+      - graphqlstore
+
+  healthchecks:
+    container_name: healthchecks-ui
+    image: xabarilcoding/healthchecksui
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      - storage_provider=SqlServer
+      - storage_connection=Server=mssql;Database=Store;User=sa;Password=!MyComplexPassword
+      - Logging:LogLevel:Default=Debug
+      - Logging:Loglevel:Microsoft=Warning
+      - Logging:LogLevel:HealthChecks=Debug
+      - HealthChecksUI:HealthChecks:0:Name=webapi
+      - HealthChecksUI:HealthChecks:0:Uri=http://webapi:5000/healthz
+      - HealthChecksUI:HealthChecks:1:Name=webmvc
+      - HealthChecksUI:HealthChecks:1:Uri=http://webmvc:7000/healthz
+    ports:
+      - 8000:80
+    networks:
+      - graphqlstore
 
 networks:
   graphqlstore:
